@@ -9,6 +9,10 @@
   "author": "V",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.21.0"
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "pg": "^8.13.0",
+    "stream-chain": "^3.2.0",
+    "stream-json": "^1.8.0"
   }
 }
