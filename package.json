@@ -1,0 +1,14 @@
+{
+  "name": "heart-rate-tracker",
+  "version": "1.0.0",
+  "description": "Track heart rate",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "V",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
