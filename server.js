@@ -1,9 +1,16 @@
+
 const express = require('express');
 const app = express();
-const port = 3000;
+const config = require('./config/config');
+const clinicalDataRoutes = require('./routes/routes');
 
-app.use(express.json()); 
+// set the payload size limit as required
+app.use(express.json({ limit: config.payloadSizeLimit })); 
 
-app.listen(port, () => {
-    console.log(`App listening on port ${port}`)
-  })
+// Use routes
+
+
+app.use('/api/clinical-data', clinicalDataRoutes);
+app.listen(config.port, () => {
+  console.log(`App listening on port ${config.port}`);
+});
