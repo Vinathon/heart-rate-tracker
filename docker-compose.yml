@@ -1,0 +1,60 @@
+# docker-compose.yml
+
+version: '3.8'  
+
+services:
+  server:
+    image: njaanaada/heart-rate-aggregator:1.0.2
+    container_name: heart-rate-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # Map container port 3000 to host port 3000
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - PG_HOST=${DB_HOST}
+      - PG_PORT=${DB_PORT}
+      - PG_USER=${DB_USER}
+      - PG_PASSWORD=${DB_PASSWORD}
+      - PG_DATABASE=${DB_NAME}
+      # Add other environment variables as needed
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  worker:
+    image: njaanaada/heart-rate-aggregator:1.0.2
+    container_name: heart-rate-worker
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - PG_HOST=${DB_HOST}
+      - PG_PORT=${DB_PORT}
+      - PG_USER=${DB_USER}
+      - PG_PASSWORD=${DB_PASSWORD}
+      - PG_DATABASE=${DB_NAME}
+      # Add other environment variables as needed
+    command: ["npm", "run", "worker"]  # Runs the worker script
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: heart-rate-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"  # Optional: Expose Redis port if you need to access it externally
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
