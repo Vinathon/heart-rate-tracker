@@ -10,7 +10,7 @@ app.use(express.json({ limit: config.payloadSizeLimit }));
 // Use routes
 
 
-app.use('/api/clinical-data', clinicalDataRoutes);
+app.use('/v1/clinical-data', clinicalDataRoutes);
 app.listen(config.port, () => {
   console.log(`App listening on port ${config.port}`);
 });
