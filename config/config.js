@@ -1,10 +1,10 @@
-// config/config.js
+// // config/config.js
 require('dotenv').config();
 const fs = require('fs');
 module.exports = {
     port: process.env.PORT || 3000,
-    intervalDurationMinutes: Number(process.env.INTERVAL_DURATION_MINUTES) || 15,
-    payloadSizeLimit: process.env.PAYLOAD_SIZE_LIMIT || '5mb',
+    intervalDurationMinutes: 15,
+    payloadSizeLimit: '5mb',
     db: {
         user: process.env.DB_USER ,
         password: process.env.DB_PASSWORD ,
@@ -18,3 +18,4 @@ module.exports = {
     }
 
 };
+
