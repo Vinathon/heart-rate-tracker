@@ -34,6 +34,7 @@ Run Docker Compose to start all services.
 
 3. **Verify Containers Are Running**
 Check the status of your containers to ensure they're up and running without issues.
+    
     docker-compose ps
 
 4. **Access the Application**
@@ -45,6 +46,7 @@ Check the status of your containers to ensure they're up and running without iss
 
     POST /v1/clinical-data
     Description: Submit clinical data to be processed and aggregated.
+    RequestBody: Paste the sample file provided
 
     Endpoint:
     POST http://localhost:3000/v1/clinical-data
@@ -58,3 +60,50 @@ Check the status of your containers to ensure they're up and running without iss
     GET http://localhost:3000/v1/clinical-data/:requestId  
     example: 
         http://localhost:3000/v1/clinical-data/7d0629f4-1157-4516-8a12-00f81dc34c76
+
+    Response:
+      {
+        "requestId": "930e8a66-1a6e-4a5a-a00a-145dfd9ce90a",
+        "data": {
+          "BP": {
+            "uom": "mmHg",
+            "name": "Blood Pressure"
+          },
+          "STEPS": {
+            "uom": "",
+            "data": [
+              {
+                "on_date": "2020-10-05T13:00:00.000000Z",
+                "measurement": "11031"
+              }
+            ],
+            "name": "Steps"
+          },
+          "HEIGHT": {
+            "uom": "cm",
+            "name": "Height"
+          },
+          "WEIGHT": {
+            "uom": "Kg",
+            "name": "Weight"
+          },
+          "HEART_RATE": {
+            "uom": "beats/min",
+            "data": [
+              {
+                "to_date": "2020-10-07T07:30:00.000Z",
+                "from_date": "2020-10-07T07:10:00.000Z",
+                "measurement": {
+                  "low": 69,
+                  "high": 83
+                }
+              }
+            ],
+            "name": "Heart Rate"
+          },
+          "BLOOD_GLUCOSE_LEVELS": {
+            "uom": "mmol/L",
+            "name": "Blood Glucose"
+          }
+        }
+      }
