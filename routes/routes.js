@@ -6,6 +6,8 @@ const validatePayload = require('../middleware/validationMiddleware');
 
 router.post('/', validatePayload,clinicalDataController.receiveClinicalData);
 
-router.get('/:patientId', clinicalDataController.getClinicalData);
+router.get('/:requestId', clinicalDataController.getAggregatedData);
 
 module.exports = router;
+
+
