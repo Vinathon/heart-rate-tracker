@@ -1,65 +1,70 @@
 // controllers/controller.js
-const dataProcessor = require('../helpers/helper');
+const { v4: uuidv4 } = require('uuid');
+const clinicalDataQueue = require('../queues/clinicalDataQueue');
 const pool = require('../db/db');
-const config = require('../config/config');
 
-// Controller function to receive and process clinical data
+/**
+ * Receives clinical data, enqueues it for processing, and returns a unique ID.
+ */
 const receiveClinicalData = async (req, res) => {
-    try {
-        const payload = req.body;
+  try {
+    const payload = req.body;
 
-        // Process the clinical data asynchronously
-        const processedData = await dataProcessor.processClinicalData(
-            payload,
-            config.intervalDurationMinutes
-        );
+    // Generate a unique ID for the request
+    const requestId = uuidv4();
 
-        if (pool) {
-            // Store the data asynchronously in the database
-            await pool.query(
-                'INSERT INTO clinical_data (patient_id, data) VALUES ($1, $2)',
-                [payload.patient_id, processedData]
-            );
-        } else {
-            console.warn('Database pool is not available. Skipping database insertion.');
-            // Optionally, you can store data elsewhere or proceed without storing
-        }
+    // Add the job to the queue with the requestId
+    await clinicalDataQueue.add({ requestId, payload }, {
+      attempts: 3, // Retry up to 3 times on failure
+      backoff: 5000, // Wait 5 seconds before retrying
+    });
 
-        // Return the processed response
-        res.status(200).json(processedData);
-    } catch (error) {
-        console.error('Error processing clinical data:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
+    // Respond with the requestId
+    res.status(202).json({ requestId, message: 'Data is being processed.' });
+  } catch (error) {
+    console.error('Error enqueuing clinical data:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
 
-// Controller function to retrieve the latest clinical data for a patient
-const getClinicalData = async (req, res) => {
-    const { patientId } = req.params;
+/**
+ * Retrieves the aggregated clinical data based on the requestId.
+ */
+const getAggregatedData = async (req, res) => {
+  const { requestId } = req.params;
 
-    try {
-        if (pool) {
-            const result = await pool.query(
-                'SELECT data FROM clinical_data WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 1',
-                [patientId]
-            );
+  try {
+    const result = await pool.query(
+      'SELECT data FROM clinical_data_2 WHERE request_id = $1',
+      [requestId]
+    );
 
-            if (result.rows.length === 0) {
-                return res.status(404).json({ message: 'No data found for this patient.' });
-            }
+    if (result.rows.length === 0) {
+      // Check if the job is still in the queue or being processed
+      const waiting = await clinicalDataQueue.getWaiting();
+      console.log('waiting: ', waiting);
+      const active = await clinicalDataQueue.getActive();
+      console.log('active: ', active);
 
-            res.status(200).json(result.rows[0].data);
-        } else {
-            console.warn('Database pool is not available. Cannot retrieve data.');
-            res.status(503).json({ error: 'Service Unavailable' });
-        }
-    } catch (error) {
-        console.error('Error retrieving clinical data:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+      const isInQueue = waiting.some(job => job.data.requestId === requestId);
+      const isActive = active.some(job => job.data.requestId === requestId);
+
+      if (isInQueue || isActive) {
+        return res.status(202).json({ status: 'Processing', message: 'Data is still being processed.' });
+      }
+
+      return res.status(404).json({ message: 'No data found for the provided requestId.' });
     }
+    console.log(JSON.stringify(result.rows[0]))
+    // Return the aggregated data
+    res.status(200).json({ requestId, data: result.rows[0].data });
+  } catch (error) {
+    console.error('Error retrieving aggregated data:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
 
 module.exports = {
-    receiveClinicalData,
-    getClinicalData,
+  receiveClinicalData,
+  getAggregatedData,
 };
