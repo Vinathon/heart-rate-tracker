@@ -2,6 +2,7 @@
 const { v4: uuidv4 } = require('uuid');
 const clinicalDataQueue = require('../queues/clinicalDataQueue');
 const pool = require('../db/db');
+const logger = require('../logger');
 
 /**
  * Receives clinical data, enqueues it for processing, and returns a unique ID.
@@ -22,7 +23,7 @@ const receiveClinicalData = async (req, res) => {
     // Respond with the requestId
     res.status(202).json({ requestId, message: 'Data is being processed.' });
   } catch (error) {
-    console.error('Error enqueuing clinical data:', error);
+    logger.error('Error enqueuing clinical data:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
@@ -42,9 +43,9 @@ const getAggregatedData = async (req, res) => {
     if (result.rows.length === 0) {
       // Check if the job is still in the queue or being processed
       const waiting = await clinicalDataQueue.getWaiting();
-      console.log('waiting: ', waiting);
+      logger.info('waiting: ', waiting);
       const active = await clinicalDataQueue.getActive();
-      console.log('active: ', active);
+      logger.info('active: ', active);
 
       const isInQueue = waiting.some(job => job.data.requestId === requestId);
       const isActive = active.some(job => job.data.requestId === requestId);
@@ -55,11 +56,11 @@ const getAggregatedData = async (req, res) => {
 
       return res.status(404).json({ message: 'No data found for the provided requestId.' });
     }
-    console.log(JSON.stringify(result.rows[0]))
+    logger.info(JSON.stringify(result.rows[0]))
     // Return the aggregated data
     res.status(200).json({ requestId, data: result.rows[0].data });
   } catch (error) {
-    console.error('Error retrieving aggregated data:', error);
+    logger.error('Error retrieving aggregated data:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };

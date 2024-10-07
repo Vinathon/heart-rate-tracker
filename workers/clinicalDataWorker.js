@@ -3,6 +3,7 @@
 const config = require('../config/config');
 const clinicalDataQueue = require('../queues/clinicalDataQueue');
 const pool = require('../db/db');
+const logger = require('../logger');
 
 /**
  * Aggregates Heart Rate data into 15-minute intervals.
@@ -82,9 +83,9 @@ const processJob = async (job) => {
       [requestId, payload.patient_id, dataToStore]
     );
 
-    console.log(`Job ${requestId} processed successfully.`);
+    logger.info(`Job ${requestId} processed successfully.`);
   } catch (error) {
-    console.error(`Error processing job ${requestId}:`, error);
+    logger.error(`Error processing job ${requestId}:`, error);
     throw error; // Let Bull handle retries
   }
 };
@@ -94,11 +95,11 @@ clinicalDataQueue.process(processJob);
 
 // Event listeners for logging
 clinicalDataQueue.on('completed', (job, result) => {
-  console.log(`Job ${job.data.requestId} completed.`);
+    logger.info(`Job ${job.data.requestId} completed.`);
 });
 
 clinicalDataQueue.on('failed', (job, err) => {
-  console.error(`Job ${job.data.requestId} failed:`, err);
+    logger.error(`Job ${job.data.requestId} failed:`, err);
 });
 
-console.log('Clinical Data Worker is running and listening to the queue...');
+logger.info('Clinical Data Worker is running and listening to the queue...');
